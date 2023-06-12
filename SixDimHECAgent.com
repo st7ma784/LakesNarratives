@@ -21,5 +21,5 @@ export ISHEC=1
 # debugging flags (optional)
 export NCCL_DEBUG=INFO
 export NCCL_DEBUG_SUBSYS=ALL
-export wandb='9cf7e97e2460c18a89429deed624ec1cbfb537bc'
+export wandb='<YOUR WANDBKEY>'
 python trainagent.py --data_dir $global_scratch --sweep_id abcddefg
