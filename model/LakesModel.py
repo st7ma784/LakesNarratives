@@ -118,6 +118,8 @@ class LightningCLIPModule(LightningModule):
         #add noise to x1 and x2
         x1 = x1 + torch.randn_like(x1) * 0.05
         x2 = x2 + torch.randn_like(x2) * 0.05
+        x1=x1/x1.norm(dim=-1,keep_dim=True)
+        x2=x2/x2.norm(dim=-1,keep_dim=True)
         Lossx1=self.loss(x1 @ x2.T, torch.arange(x1.shape[0]))
         Lossx2=self.loss(x2 @ x1.T, torch.arange(x2.shape[0]))
         loss=Lossx1+Lossx2
