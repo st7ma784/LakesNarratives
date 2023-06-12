@@ -34,20 +34,17 @@ def train(config={
     version=int(config.get("codeversion",-1))
     
     from pytorch_lightning.callbacks import TQDMProgressBar,EarlyStopping
-    from model.LossCalculation import calculate_loss,calculate_loss2,calculate_loss3,calculate_loss4,calculate_loss5,calculate_lossStock
-    from model.PruneCalculation import PruneHook
-    from model.trainclip_v53 import LightningCLIPModule
+    from model.LakesModel import LightningCLIPModule
     # from pl_bolts.datamodules import ImagenetDataModule
     model=LightningCLIPModule( train_batch_size=config["batch_size"],
                                 **config)
     if dir is None:
         dir=config.get("dir",".")
     if Dataset is None:
-        from BuildSpainDataSet import COCODataModule
-        from BuildLAION import LaionDataModule
+        from BuildNarrativesDataSet import NarrativesDataModule
         
         #Dataset=LaionDataModule(Cache_dir=dir,batch_size=config["batch_size"])
-        Dataset=COCODataModule(Cache_dir=dir,batch_size=config["batch_size"])
+        Dataset=NarrativesDataModule(Cache_dir=dir,batch_size=config["batch_size"])
     if devices is None:
         devices=config.get("devices","auto")
     if accelerator is None:
