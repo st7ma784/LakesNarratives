@@ -109,10 +109,10 @@ class LightningCLIPModule(LightningModule):
         geoCode= batch["geonouns"]
         Location= batch["plnames"]
         #create mask for noise
-        mask = torch.bernoulli(torch.full((text.shape[0], text.shape[1]), 0.15)).bool()
+        mask = torch.bernoulli(torch.full((text.shape[0], text.shape[1]), 0.15,device=self.device)).bool()
         #randomly add noise Electra style...
-        x1 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size) %self.vocab_size, geoCode, Location)
-        x2 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size) %self.vocab_size, geoCode, Location)
+        x1 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size,device=self.device) %self.vocab_size, geoCode, Location)
+        x2 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size,device=self.device) %self.vocab_size, geoCode, Location)
         
         
         #add noise to x1 and x2
