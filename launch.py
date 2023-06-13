@@ -41,7 +41,7 @@ def train(config={
         
         #Dataset=LaionDataModule(Cache_dir=dir,batch_size=config["batch_size"])
         Dataset=NarrativesDataModule(Cache_dir=dir,batch_size=config["batch_size"])
-    model=LightningCLIPModule( train_batch_size=config["batch_size"],vocab_size=Dataset.tokenizer.vocab_size,
+    model=LightningCLIPModule( train_batch_size=config["batch_size"],vocab_size=Dataset.tokenizer.vocab_size-1,
                                 **config)
     if dir is None:
         dir=config.get("dir",".")
