@@ -34,7 +34,7 @@ def train(config={
     version=int(config.get("codeversion",-1))
     
     from pytorch_lightning.callbacks import TQDMProgressBar,EarlyStopping
-    from model.train import LightningCLIPModule
+    from model.LakesModel import LightningCLIPModule
     # from pl_bolts.datamodules import ImagenetDataModule
     if Dataset is None:
         from BuildNarrativesDataSet import NarrativesDataModule
@@ -67,7 +67,7 @@ def train(config={
             devices=devices,
             #auto_select_gpus=True,
             accelerator=accelerator,
-            max_epochs=40,
+            max_epochs=400,
             #profiler="advanced",
             logger=logtool,
             strategy="dp",
