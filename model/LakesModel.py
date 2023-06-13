@@ -89,8 +89,8 @@ class LightningCLIPModule(LightningModule):
 
         # print("Location(x)",x.shape)
         #make one hot of geoCode and Location by finding zeros and non zeros
-        one_hot_geoCode = torch.is_nonzero(geoCode)
-        one_hot_Location = torch.is_nonzero(Location)
+        one_hot_geoCode = geoCode.bool().type(self.dtype)
+        one_hot_Location = Location.bool().type(self.dtype)
         print("one_hot_geoCode",one_hot_geoCode.shape)
         print("one_hot_Location",one_hot_Location.shape)
         x = self.token_embedding(text).type(self.dtype) 
