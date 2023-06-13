@@ -91,7 +91,7 @@ class LightningCLIPModule(LightningModule):
         x = self.token_embedding(text).type(self.dtype) #+  self.geoCode_embedding(geoCode).type(self.dtype) + self.Location_embedding(Location).type(self.dtype) 
         x=x+ self.positional_embedding.type(self.dtype)
         x=x/4
-        x = x.permute(1, 0, 2)  # NLD -> LND
+        #x = x.permute(1, 0, 2)  # NLD -> LND
         print("x",x.shape)
         x = self.encoder(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
