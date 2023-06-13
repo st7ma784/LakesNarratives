@@ -90,7 +90,7 @@ class LightningCLIPModule(LightningModule):
         # print("Location(x)",x.shape)
         x = self.token_embedding(text).type(self.dtype) #+  self.geoCode_embedding(geoCode).type(self.dtype) + self.Location_embedding(Location).type(self.dtype) 
         x=x+ self.positional_embedding.type(self.dtype)
-        x=x/4
+        #x=x/4
         #x = x.permute(1, 0, 2)  # NLD -> LND
         print("x",x.shape)
         x = self.encoder(x)
@@ -111,7 +111,7 @@ class LightningCLIPModule(LightningModule):
         text= batch["text"].squeeze(1)
         geoCode= batch["geonouns"].squeeze(1)
         Location= batch["plnames"].squeeze(1)
-        print(Location)
+        #print(Location)
         #create mask for noise
         mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).type(self.dtype)
         #randomly add noise Electra style...
