@@ -46,7 +46,6 @@ class LightningCLIPModule(LightningModule):
         self.geoCode_embedding = nn.Embedding(vocab_size, transformer_width)
         self.Location_embedding = nn.Embedding(vocab_size, transformer_width)
         self.positional_embedding = nn.Parameter(torch.empty(self.context_length, transformer_width))
-        self.dropout=nn.Dropout(0.95)
         
         self.ln_final = LayerNorm(transformer_width)
         self.text_projection = nn.Parameter(torch.empty(transformer_width, embed_dim))
@@ -109,17 +108,19 @@ class LightningCLIPModule(LightningModule):
         text= batch["text"]
         geoCode= batch["geonouns"]
         Location= batch["plnames"]
-        
+        #create mask for noise
+        mask = torch.bernoulli(torch.full((text.shape[0], text.shape[1]), 0.15)).bool()
         #randomly add noise Electra style...
-        x1 = self.encode_text(text+self.dropout(torch.randint_like(text,0,self.vocab_size))%self.vocab_size, geoCode, Location)
-        x2 = self.encode_text(text+self.dropout(torch.randint_like(text,0,self.vocab_size))%self.vocab_size, geoCode, Location)
+        x1 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size) %self.vocab_size, geoCode, Location)
+        x2 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size) %self.vocab_size, geoCode, Location)
         
         
         #add noise to x1 and x2
         x1 = x1 + torch.randn_like(x1) * 0.05
         x2 = x2 + torch.randn_like(x2) * 0.05
-        x1=x1/x1.norm(dim=-1,keep_dim=True)
-        x2=x2/x2.norm(dim=-1,keep_dim=True)
+        x1 = x1 / x1.norm(dim=-1, keepdim=True)
+        x2 = x2 / x2.norm(dim=-1, keepdim=True)
+
         Lossx1=self.loss(x1 @ x2.T, torch.arange(x1.shape[0]))
         Lossx2=self.loss(x2 @ x1.T, torch.arange(x2.shape[0]))
         loss=Lossx1+Lossx2
@@ -131,7 +132,6 @@ class LightningCLIPModule(LightningModule):
         self.logger.experiment.add_embedding(self.Location_embedding.weight,tag="plnames")
         self.logger.experiment.add_embedding(self.geoCode_embedding.weight,tag="geonouns")
         self.logger.experiment.add_embedding(self.token_embedding.weight,tag="text")
-
         return super().on_train_epoch_end()
             
     def configure_optimizers(self):
