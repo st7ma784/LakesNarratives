@@ -87,6 +87,8 @@ class LightningCLIPModule(LightningModule):
     def encode_text(self, text, geoCode, Location):
         x = self.token_embedding(text).type(self.dtype)  # [batch_size, n_ctx, d_model]
         print("token(x)",x.shape)
+        print("geoCode",geoCode.shape)
+        print("GeoCode(x)",self.geoCode_embedding(geoCode).shape)
         x = x + self.geoCode_embedding(geoCode).type(self.dtype)
         print("geoCode(x)",x.shape)
         x = x + self.Location_embedding(Location).type(self.dtype)
@@ -122,7 +124,7 @@ class LightningCLIPModule(LightningModule):
         x2 = self.encode_text(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask) %self.vocab_size, geoCode, Location)
         print("x1",x1.shape)
         print("x2",x2.shape)
-        
+
         
         #add noise to x1 and x2
         x1 = x1 + torch.randn_like(x1) * 0.05
