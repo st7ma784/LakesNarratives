@@ -103,7 +103,7 @@ class NarrativesDataset(Dataset):
         '''
         #print df columns
         print(self.df.columns) 
-        self.df["text"]=self.df["text"].apply(lambda x: self.tokenizer(x,return_tensors="pt",padding="max_length", truncation=True,max_length=128))
+        self.df["text"]=self.df["text"].apply(lambda x: self.tokenizer(x,return_tensors="pt",padding="max_length", truncation=True,max_length=77))
         #self.df["plnames"]=self.df["plnames"].apply(lambda x: self.tokenizer(x,return_tensors="pt",padding=True, truncation=True,max_length=512))
         self.log={}
     def __len__(self):
