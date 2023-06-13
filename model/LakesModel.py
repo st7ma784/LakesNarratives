@@ -116,7 +116,9 @@ class LightningCLIPModule(LightningModule):
         # print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
         # print("text",text.shape)
         # print("input text",(text %self.vocab_size).shape)
-        x1 = self(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size), geoCode, Location)
+
+        #+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size)
+        x1 = self(torch.clamp(text), geoCode, Location)
         x2 = self(torch.clamp(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0, self.vocab_size), geoCode, Location)
         print("x1",x1.shape)
         print("x2",x2.shape)
