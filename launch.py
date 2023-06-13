@@ -1,7 +1,7 @@
 
 import os,sys
 
-def wandbtrain(config=None,dir=None,devices=None,accelerator=None,Dataset=None,project="6DIMCLIPTOKSweepv4",entity="st7ma784"):
+def wandbtrain(config=None,dir=None,devices=None,accelerator=None,Dataset=None,project="lakesNarratives",entity="st7ma784"):
     import pytorch_lightning
 
     if config is not None:
@@ -34,17 +34,18 @@ def train(config={
     version=int(config.get("codeversion",-1))
     
     from pytorch_lightning.callbacks import TQDMProgressBar,EarlyStopping
-    from model.LakesModel import LightningCLIPModule
+    from model.train import LightningCLIPModule
     # from pl_bolts.datamodules import ImagenetDataModule
-    model=LightningCLIPModule( train_batch_size=config["batch_size"],
-                                **config)
-    if dir is None:
-        dir=config.get("dir",".")
     if Dataset is None:
         from BuildNarrativesDataSet import NarrativesDataModule
         
         #Dataset=LaionDataModule(Cache_dir=dir,batch_size=config["batch_size"])
         Dataset=NarrativesDataModule(Cache_dir=dir,batch_size=config["batch_size"])
+    model=LightningCLIPModule( train_batch_size=config["batch_size"],vocab_size=Dataset.tokenizer.vocab_size,
+                                **config)
+    if dir is None:
+        dir=config.get("dir",".")
+   
     if devices is None:
         devices=config.get("devices","auto")
     if accelerator is None:
@@ -66,7 +67,7 @@ def train(config={
             devices=devices,
             #auto_select_gpus=True,
             accelerator=accelerator,
-            max_epochs=400,
+            max_epochs=40,
             #profiler="advanced",
             logger=logtool,
             strategy="dp",
