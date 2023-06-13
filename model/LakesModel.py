@@ -24,8 +24,8 @@ class LightningCLIPModule(LightningModule):
                 context_length= 77,
                 vocab_size= 50257,
                 transformer_width= 512,
-                transformer_heads= 32,
-                transformer_layers= 4,
+                transformer_heads= 8,
+                transformer_layers= 16,
                 **kwargs,
                 ):
 
