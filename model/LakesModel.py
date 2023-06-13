@@ -92,7 +92,9 @@ class LightningCLIPModule(LightningModule):
         one_hot_geoCode = torch.clamp(geoCode,0,1).type(self.dtype)
         one_hot_Location = torch.clamp(Location,0,1).type(self.dtype)
 
-        x = self.token_embedding(text).type(self.dtype) + self.geoCode_embedding(geoCode).type(self.dtype)*one_hot_geoCode + self.Location_embedding(Location).type(self.dtype)*one_hot_Location
+        x = self.token_embedding(text).type(self.dtype) 
+        x=x + self.geoCode_embedding(geoCode).type(self.dtype)*one_hot_geoCode 
+        x=x+ self.Location_embedding(Location).type(self.dtype)*one_hot_Location
         x=x+ self.positional_embedding.type(self.dtype)
         #x=x/4
         #x = x.permute(1, 0, 2)  # NLD -> LND
