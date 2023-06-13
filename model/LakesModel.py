@@ -118,8 +118,8 @@ class LightningCLIPModule(LightningModule):
         print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
         print("text",text.shape)
         print("input text",(text %self.vocab_size).shape)
-        x1 = self.encode_text(text+torch.randint_like(text,0,self.vocab_size,device=self.device)[mask] %self.vocab_size, geoCode, Location)
-        x2 = self.encode_text(text+torch.randint_like(text,0,self.vocab_size,device=self.device)[mask] %self.vocab_size, geoCode, Location)
+        x1 = self.encode_text(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask) %self.vocab_size, geoCode, Location)
+        x2 = self.encode_text(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask) %self.vocab_size, geoCode, Location)
         
         
         #add noise to x1 and x2
