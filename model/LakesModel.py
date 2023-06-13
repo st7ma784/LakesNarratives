@@ -42,6 +42,7 @@ class LightningCLIPModule(LightningModule):
         self.loss=torch.nn.CrossEntropyLoss(reduction='sum')
 
         self.vocab_size = vocab_size
+        print("vocab_size",vocab_size)
         self.token_embedding = nn.Embedding(vocab_size, transformer_width)#
         self.geoCode_embedding = nn.Embedding(vocab_size, transformer_width)
         self.Location_embedding = nn.Embedding(vocab_size, transformer_width)
@@ -99,9 +100,9 @@ class LightningCLIPModule(LightningModule):
 
     # @torch.jit.script
     def forward(self, text, geoCode, Location):
-        x = self.encode_text(text, geoCode, Location)
+        return self.encode_text(text, geoCode, Location)
         
-        return x
+        
         
         
     def training_step(self, batch, batch_idx,optimizer_idx=0):
@@ -115,8 +116,8 @@ class LightningCLIPModule(LightningModule):
         # print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
         # print("text",text.shape)
         # print("input text",(text %self.vocab_size).shape)
-        x1 = self.encode_text(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size), geoCode, Location)
-        x2 = self.encode_text(torch.clamp(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0, self.vocab_size), geoCode, Location)
+        x1 = self(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size), geoCode, Location)
+        x2 = self(torch.clamp(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0, self.vocab_size), geoCode, Location)
         print("x1",x1.shape)
         print("x2",x2.shape)
 
