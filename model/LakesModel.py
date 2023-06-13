@@ -85,16 +85,11 @@ class LightningCLIPModule(LightningModule):
         nn.init.normal_(self.text_projection, std=self.encoder.width ** -0.5)
 
     def encode_text(self, text, geoCode, Location):
-        x = self.token_embedding(text).type(self.dtype)  # [batch_size, n_ctx, d_model]
-        # print("token(x)",x.shape)
-        # print("geoCode",geoCode.shape)
-        # print("GeoCode(x)",self.geoCode_embedding(geoCode).shape)
-        x = x + self.geoCode_embedding(geoCode).type(self.dtype)
-        # print("geoCode(x)",x.shape)
-        x = x + self.Location_embedding(Location).type(self.dtype)
+
         # print("Location(x)",x.shape)
-        x = x + self.positional_embedding.type(self.dtype)
+        x = self.token_embedding(text).type(self.dtype) +  self.geoCode_embedding(geoCode).type(self.dtype) + self.Location_embedding(Location).type(self.dtype) + self.positional_embedding.type(self.dtype)
         x = x.permute(1, 0, 2)  # NLD -> LND
+        print("x",x.shape)
         x = self.encoder(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x).type(self.dtype)
@@ -120,8 +115,8 @@ class LightningCLIPModule(LightningModule):
         # print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
         # print("text",text.shape)
         # print("input text",(text %self.vocab_size).shape)
-        x1 = self.encode_text(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),None,self.vocab_size), geoCode, Location)
-        x2 = self.encode_text(torch.clamp(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),None, self.vocab_size), geoCode, Location)
+        x1 = self.encode_text(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size), geoCode, Location)
+        x2 = self.encode_text(torch.clamp(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0, self.vocab_size), geoCode, Location)
         print("x1",x1.shape)
         print("x2",x2.shape)
 
