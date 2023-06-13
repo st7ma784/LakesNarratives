@@ -111,6 +111,7 @@ class LightningCLIPModule(LightningModule):
         text= batch["text"].squeeze(1)
         geoCode= batch["geonouns"].squeeze(1)
         Location= batch["plnames"].squeeze(1)
+        print(geoCode)
         #create mask for noise
         mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).type(self.dtype)
         #randomly add noise Electra style...
@@ -121,7 +122,7 @@ class LightningCLIPModule(LightningModule):
 
         #+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size)
         x1 = self(text, geoCode, Location)
-        x2 = self(torch.clamp(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask).type(self.dtype),0, self.vocab_size), geoCode, Location)
+        x2 = self(text, geoCode, Location)
         print("x1",x1.shape)
         print("x2",x2.shape)
 
@@ -132,8 +133,8 @@ class LightningCLIPModule(LightningModule):
         x1 = x1 / x1.norm(dim=-1, keepdim=True)
         x2 = x2 / x2.norm(dim=-1, keepdim=True)
 
-        Lossx1=self.loss(x1 @ x2.T, torch.arange(x1.shape[0]))
-        Lossx2=self.loss(x2 @ x1.T, torch.arange(x2.shape[0]))
+        Lossx1=self.loss(x1 @ x2.T *self.logit_scale.exp(), torch.arange(x1.shape[0]))
+        Lossx2=self.loss(x2 @ x1.T *self.logit_scale.exp(), torch.arange(x2.shape[0]))
         loss=Lossx1+Lossx2
         loss=loss/2
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
