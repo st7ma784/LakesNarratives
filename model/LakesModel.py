@@ -111,8 +111,8 @@ class LightningCLIPModule(LightningModule):
         
     def training_step(self, batch, batch_idx,optimizer_idx=0):
         text= batch["text"].squeeze(1)
-        geoCode= batch["geonouns"]
-        Location= batch["plnames"]
+        geoCode= batch["geonouns"].squeeze(1)
+        Location= batch["plnames"].squeeze(1)
         #create mask for noise
         mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).bool()
         #randomly add noise Electra style...
