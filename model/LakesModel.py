@@ -119,7 +119,7 @@ class LightningCLIPModule(LightningModule):
         Location= batch["plnames"].squeeze(1)
         #print(Location)
         #create mask for noise
-        mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device))
+        mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).long()
         #randomly add noise Electra style...
         # print("mask",mask.shape)
         # print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
