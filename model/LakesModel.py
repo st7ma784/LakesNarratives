@@ -88,7 +88,11 @@ class LightningCLIPModule(LightningModule):
     def encode_text(self, text, geoCode, Location):
 
         # print("Location(x)",x.shape)
-        x = self.token_embedding(text).type(self.dtype) #+  self.geoCode_embedding(geoCode).type(self.dtype) + self.Location_embedding(Location).type(self.dtype) 
+        #make one hot of geoCode and Location by finding zeros and non zeros
+        one_hot_geoCode = torch.clamp(geoCode,0,1)
+        one_hot_Location = torch.clamp(Location,0,1)
+
+        x = self.token_embedding(text).type(self.dtype) + self.geoCode_embedding(geoCode).type(self.dtype)*one_hot_geoCode + one_hot_Location*self.Location_embedding(Location).type(self.dtype) 
         x=x+ self.positional_embedding.type(self.dtype)
         #x=x/4
         #x = x.permute(1, 0, 2)  # NLD -> LND
@@ -121,8 +125,8 @@ class LightningCLIPModule(LightningModule):
         # print("input text",(text %self.vocab_size).shape)
 
         #+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size)
-        x1 = self(text, geoCode, Location)
-        x2 = self(text, geoCode, Location)
+        x1 = self(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size), geoCode, Location)
+        x2 = self(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size), geoCode, Location)
         print("x1",x1.shape)
         print("x2",x2.shape)
 
