@@ -86,8 +86,11 @@ class LightningCLIPModule(LightningModule):
 
     def encode_text(self, text, geoCode, Location):
         x = self.token_embedding(text).type(self.dtype)  # [batch_size, n_ctx, d_model]
+        print("token(x)",x.shape)
         x = x + self.geoCode_embedding(geoCode).type(self.dtype)
+        print("geoCode(x)",x.shape)
         x = x + self.Location_embedding(Location).type(self.dtype)
+        print("Location(x)",x.shape)
         x = x + self.positional_embedding.type(self.dtype)
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.encoder(x)
