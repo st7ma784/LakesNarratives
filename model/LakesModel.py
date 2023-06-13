@@ -112,7 +112,7 @@ class LightningCLIPModule(LightningModule):
         
         #randomly add noise Electra style...
         x1 = self.encode_text(text+self.dropout(torch.randint_like(text,self.vocab_size,0))%self.vocab_size, geoCode, Location)
-        x2 = self.encode_text(text+self.dropout(torch.randint_like(text,self.vocab_size,0))%self.vocab_size), geoCode, Location)
+        x2 = self.encode_text(text+self.dropout(torch.randint_like(text,self.vocab_size,0))%self.vocab_size, geoCode, Location)
         
         
         #add noise to x1 and x2
