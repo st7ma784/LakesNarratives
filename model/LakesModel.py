@@ -86,13 +86,13 @@ class LightningCLIPModule(LightningModule):
 
     def encode_text(self, text, geoCode, Location):
         x = self.token_embedding(text).type(self.dtype)  # [batch_size, n_ctx, d_model]
-        print("token(x)",x.shape)
-        print("geoCode",geoCode.shape)
-        print("GeoCode(x)",self.geoCode_embedding(geoCode).shape)
+        # print("token(x)",x.shape)
+        # print("geoCode",geoCode.shape)
+        # print("GeoCode(x)",self.geoCode_embedding(geoCode).shape)
         x = x + self.geoCode_embedding(geoCode).type(self.dtype)
-        print("geoCode(x)",x.shape)
+        # print("geoCode(x)",x.shape)
         x = x + self.Location_embedding(Location).type(self.dtype)
-        print("Location(x)",x.shape)
+        # print("Location(x)",x.shape)
         x = x + self.positional_embedding.type(self.dtype)
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.encoder(x)
@@ -116,10 +116,10 @@ class LightningCLIPModule(LightningModule):
         #create mask for noise
         mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).bool()
         #randomly add noise Electra style...
-        print("mask",mask.shape)
-        print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
-        print("text",text.shape)
-        print("input text",(text %self.vocab_size).shape)
+        # print("mask",mask.shape)
+        # print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
+        # print("text",text.shape)
+        # print("input text",(text %self.vocab_size).shape)
         x1 = self.encode_text(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask) %self.vocab_size, geoCode, Location)
         x2 = self.encode_text(text+(torch.randint_like(text,0,self.vocab_size,device=self.device)*mask) %self.vocab_size, geoCode, Location)
         print("x1",x1.shape)
@@ -127,8 +127,8 @@ class LightningCLIPModule(LightningModule):
 
         
         #add noise to x1 and x2
-        x1 = x1 + torch.randn_like(x1) * 0.05
-        x2 = x2 + torch.randn_like(x2) * 0.05
+        x1 = x1 + (torch.randn_like(x1) * 0.05)
+        x2 = x2 + (torch.randn_like(x2) * 0.05)
         x1 = x1 / x1.norm(dim=-1, keepdim=True)
         x2 = x2 / x2.norm(dim=-1, keepdim=True)
 
