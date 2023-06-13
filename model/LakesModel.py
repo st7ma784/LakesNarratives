@@ -114,6 +114,7 @@ class LightningCLIPModule(LightningModule):
         #create mask for noise
         mask = torch.bernoulli(torch.full((text.shape[0], text.shape[1]), 0.15,device=self.device)).bool()
         #randomly add noise Electra style...
+        print("input text",(text+mask*torch.randint_like(text,0,self.vocab_size,device=self.device) %self.vocab_size).shape)
         x1 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size,device=self.device) %self.vocab_size, geoCode, Location)
         x2 = self.encode_text(text+mask*torch.randint_like(text,0,self.vocab_size,device=self.device) %self.vocab_size, geoCode, Location)
         
