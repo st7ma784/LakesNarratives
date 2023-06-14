@@ -138,8 +138,7 @@ class LightningCLIPModule(LightningModule):
         self.logger.experiment.add_embedding(self.Location_embedding.weight,tag="plnames")
         self.logger.experiment.add_embedding(self.geoCode_embedding.weight,tag="geonouns")
         self.logger.experiment.add_embedding(self.token_embedding.weight,tag="text")
-        return super().on_train_epoch_end()
-            
+
     def configure_optimizers(self):
         
         optimizer = torch.optim.AdamW(
