@@ -100,7 +100,7 @@ class LightningCLIPModule(LightningModule):
         x=x+ torch.mul(one_hot_Location,self.Location_embedding(Location).type(self.dtype))
         x=x+ self.positional_embedding.type(self.dtype)
         #x=x/4
-        #x = x.permute(1, 0, 2)  # NLD -> LND
+        x = x.permute(1, 0, 2)  # NLD -> LND
         print("x",x.shape)
         x = self.encoder(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
