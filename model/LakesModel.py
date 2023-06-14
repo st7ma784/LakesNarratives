@@ -121,13 +121,10 @@ class LightningCLIPModule(LightningModule):
         x2 = self((text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)) % self.vocab_size, geoCode, Location)
               
         #add noise to x1 and x2
-        x1 = x1 + (torch.randn_like(x1) * 0.05)
-        x2 = x2 + (torch.randn_like(x2) * 0.05)
+        x1 = x1 #+ (torch.randn_like(x1) * 0.05)
+        x2 = x2 #+ (torch.randn_like(x2) * 0.05)
         x1 = x1 / x1.norm(dim=-1, keepdim=True)
         x2 = x2 / x2.norm(dim=-1, keepdim=True)
-        print("x1",x1.shape)
-        print("x2",x2.shape)
-
         l1= x1 @ x2.T 
         l2= x2 @ x1.T 
         Lossx1=self.loss( l1 *self.logit_scale.exp(), labels)
