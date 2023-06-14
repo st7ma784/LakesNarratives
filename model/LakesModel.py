@@ -94,6 +94,8 @@ class LightningCLIPModule(LightningModule):
         print("one_hot_geoCode",one_hot_geoCode.shape)
         print("one_hot_Location",one_hot_Location.shape)
         x = self.token_embedding(text).type(self.dtype) 
+        print("x",x.shape)
+        print("geoCode",self.geoCode_embedding(geoCode).shape)
         x=x + torch.mul(one_hot_geoCode,self.geoCode_embedding(geoCode).type(self.dtype)) 
         x=x+ torch.mul(one_hot_Location,self.Location_embedding(Location).type(self.dtype))
         x=x+ self.positional_embedding.type(self.dtype)
