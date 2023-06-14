@@ -127,7 +127,7 @@ class LightningCLIPModule(LightningModule):
         x2 = x2 / x2.norm(dim=-1, keepdim=True)
 
         Lossx1=self.loss(self.logit_scale.exp() * x1 @ x2.T , torch.arange(x1.shape[0],device=self.device))
-        Lossx2=self.loss(self.logit_scale.exp() *x2 @ x1.T , torch.arange(x2.shape[0],device=self.device))
+        Lossx2=self.loss(self.logit_scale.exp() * x2 @ x1.T , torch.arange(x2.shape[0],device=self.device))
         loss=Lossx1+Lossx2
         loss=loss/2
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
