@@ -70,12 +70,12 @@ def train(config={
             max_epochs=400,
             #profiler="advanced",
             logger=logtool,
-            strategy="dp",
+            strategy="ddp",
             num_nodes=int(os.getenv("SLURM_NNODES",1)),
             callbacks=callbacks,
             #gradient_clip_val=0.25,# Not supported for manual optimization
             fast_dev_run=False,
-            precision=p
+            precision=32
     )
     if config["batch_size"] !=1:
         
