@@ -17,7 +17,7 @@ class NarrativesDataModule(pl.LightningDataModule):
         self.ann_dir=os.path.join(self.data_dir,"annotations")
         self.batch_size = batch_size
         self.splits={"train":[],"val":[],"test":[]}
-        self.tokenizer=CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32",cache_dir=self.data_dir)
+        self.tokenizer=CLIPTokenizer.from_pz    retrained("openai/clip-vit-base-patch32",cache_dir=self.data_dir)
         # try: 
         #     self.tokenizer=AutoTokenizer.from_pretrained("gpt2",cache_dir=self.data_dir)
         # except ValueError as e:
@@ -114,6 +114,9 @@ class NarrativesDataset(Dataset):
         text=entry["text"] #already tokenized
         #as tensor
         text=text["input_ids"]
+
+
+
         returndict={"text":text}
 
         for name in ['plnames', 'geonouns',  'pos_emotions','neg_emotions', 'loc_advs', 'sp_prep']:
