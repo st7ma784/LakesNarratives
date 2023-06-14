@@ -91,17 +91,11 @@ class LightningCLIPModule(LightningModule):
         #make one hot of geoCode and Location by finding zeros and non zeros
         one_hot_geoCode = geoCode.bool().type(self.dtype).unsqueeze(-1)
         one_hot_Location = Location.bool().type(self.dtype).unsqueeze(-1)
-        print("one_hot_geoCode",one_hot_geoCode.shape)
-        print("one_hot_Location",one_hot_Location.shape)
         x = self.token_embedding(text).type(self.dtype) 
-        print("x",x.shape)
-        print("geoCode",self.geoCode_embedding(geoCode).shape)
         x=x + torch.mul(one_hot_geoCode,self.geoCode_embedding(geoCode).type(self.dtype)) 
         x=x+ torch.mul(one_hot_Location,self.Location_embedding(Location).type(self.dtype))
         x=x+ self.positional_embedding.type(self.dtype)
-        #x=x/4
         x = x.permute(1, 0, 2)  # NLD -> LND
-        print("x",x.shape)
         x = self.encoder(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x).type(self.dtype)
@@ -120,30 +114,20 @@ class LightningCLIPModule(LightningModule):
         text= batch["text"].squeeze(1)
         geoCode= batch["geonouns"].squeeze(1)
         Location= batch["plnames"].squeeze(1)
-        #print(Location)
-        #create mask for noise
-        mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).long()
-        #randomly add noise Electra style...
-        # print("mask",mask.shape)
-        # print("maskmade",torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)
-        # print("text",text.shape)
-        # print("input text",(text %self.vocab_size).shape)
 
-        #+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size)
+        mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).long()
+
         x1 = self((text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)) % self.vocab_size, geoCode, Location)
         x2 = self(torch.clamp(text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask),0,self.vocab_size), geoCode, Location)
-        print("x1",x1.shape)
-        print("x2",x2.shape)
-
-        
+              
         #add noise to x1 and x2
         x1 = x1 + (torch.randn_like(x1) * 0.05)
         x2 = x2 + (torch.randn_like(x2) * 0.05)
         x1 = x1 / x1.norm(dim=-1, keepdim=True)
         x2 = x2 / x2.norm(dim=-1, keepdim=True)
 
-        Lossx1=self.loss(x1 @ x2.T *self.logit_scale.exp(), torch.arange(x1.shape[0]))
-        Lossx2=self.loss(x2 @ x1.T *self.logit_scale.exp(), torch.arange(x2.shape[0]))
+        Lossx1=self.loss(self.logit_scale.exp() * x1 @ x2.T , torch.arange(x1.shape[0],device=self.device))
+        Lossx2=self.loss(self.logit_scale.exp() *x2 @ x1.T , torch.arange(x2.shape[0],device=self.device))
         loss=Lossx1+Lossx2
         loss=loss/2
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
