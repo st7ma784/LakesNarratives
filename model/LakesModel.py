@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from typing import Optional
 from clip.model import Transformer,LayerNorm
 
-
+import wandb
 class LightningCLIPModule(LightningModule):
     def __init__(self,
                 
@@ -39,7 +39,7 @@ class LightningCLIPModule(LightningModule):
             heads=transformer_heads,
             attn_mask=self.build_attention_mask()
             )
-        self.loss=torch.nn.CrossEntropyLoss(reduction='sum')
+        self.loss=torch.nn.CrossEntropyLoss(reduction='mean')
 
         self.vocab_size = vocab_size
         print("vocab_size",vocab_size)
@@ -69,7 +69,15 @@ class LightningCLIPModule(LightningModule):
         proj_std = (self.encoder.width ** -0.5) * ((2 * self.encoder.layers) ** -0.5)
         attn_std = self.encoder.width ** -0.5
         fc_std = (2 * self.encoder.width) ** -0.5
-       
+        for _,layer in self.encode_image.named_modules():
+            if isinstance(layer, nn.ModuleList):
+                for block in layer:
+
+                    nn.init.normal_(block.weight, std=1)
+                    nn.init.zeros_(block.bias)
+            elif isinstance(layer, nn.Linear):
+                nn.init.normal_(layer.weight, std=1)
+                nn.init.zeros_(layer.bias)
         for _,layer in self.encoder.named_modules():
             if isinstance(layer, nn.ModuleList):
                 for block in layer:
@@ -83,9 +91,8 @@ class LightningCLIPModule(LightningModule):
             nn.init.normal_(block.attn.out_proj.weight, std=proj_std)
             nn.init.normal_(block.mlp.c_fc.weight, std=fc_std)
             nn.init.normal_(block.mlp.c_proj.weight, std=proj_std)
-        nn.init.normal_(self.text_projection, std=self.encoder.width ** -0.5)
 
-    def encode_text(self, text, geoCode, Location):
+    def encode_text(self, text, geoCode, Location,eot):
 
         # print("Location(x)",x.shape)
         #make one hot of geoCode and Location by finding zeros and non zeros
@@ -95,17 +102,18 @@ class LightningCLIPModule(LightningModule):
         x=x + torch.mul(one_hot_geoCode,self.geoCode_embedding(geoCode).type(self.dtype)) 
         x=x+ torch.mul(one_hot_Location,self.Location_embedding(Location).type(self.dtype))
         x=x+ self.positional_embedding.type(self.dtype)
+        #print("x",x.shape)
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.encoder(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
         x = self.ln_final(x).type(self.dtype)
-        x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] 
+        x = x[torch.arange(eot.shape[0]), eot] 
         return x
 
 
     # @torch.jit.script
-    def forward(self, text, geoCode, Location):
-        return self.encode_text(text, geoCode, Location)
+    def forward(self, text, geoCode, Location,eot):
+        return self.encode_text(text, geoCode, Location,eot)
         
         
         
@@ -115,36 +123,59 @@ class LightningCLIPModule(LightningModule):
         geoCode= batch["geonouns"].squeeze(1)
         Location= batch["plnames"].squeeze(1)
         labels=torch.arange(text.shape[0],device=self.device)
-        mask = torch.bernoulli(torch.full(text.shape, 0.15,device=self.device)).long()
-
-        x1 = self((text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)) % self.vocab_size, geoCode, Location)
-        x2 = self((text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)) % self.vocab_size, geoCode, Location)
+        eot=text.argmax(dim=-1)
+        mask = torch.bernoulli(torch.full(text.shape, 0.05,device=self.device)).long()
+        mask2= torch.bernoulli(torch.full(text.shape, 0.05,device=self.device)).long()
+        x1 = self((text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask)) % self.vocab_size, geoCode, Location,eot)
+        x2 = self((text+ (torch.randint_like(text,0,self.vocab_size,device=self.device)*mask2)) % self.vocab_size, geoCode, Location,eot)
               
         #add noise to x1 and x2
-        x1 = x1 #+ (torch.randn_like(x1) * 0.05)
-        x2 = x2 #+ (torch.randn_like(x2) * 0.05)
+    
+    
+        # print("x1a",x1)
+        
+        # x1 = x1 + (torch.randn_like(x1) * 0.05)
+        # x2 = x2 + (torch.randn_like(x2) * 0.05)
         x1 = x1 / x1.norm(dim=-1, keepdim=True)
         x2 = x2 / x2.norm(dim=-1, keepdim=True)
-        l1= x1 @ x2.T 
-        l2= x2 @ x1.T 
-        Lossx1=self.loss( l1 *self.logit_scale.exp(), labels)
+        # print("x1b",x1)
+        # print("x2",x2)
+        l1= x1 @ x2.T
+        l2= x2 @ x1.T
+        # print("l1",l1)
+        # print("l2",l2)
+        Lossx1=self.loss( l1 *self.logit_scale.exp(), labels) # *self.logit_scale.exp()
         Lossx2=self.loss( l2 *self.logit_scale.exp(), labels)
+
         loss=Lossx1+Lossx2
         loss=loss/2
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return {"loss": loss}
+    
     def on_train_epoch_end(self) -> None:
-        #log embeddings for geonouns and plnames
-        self.logger.experiment.add_embedding(self.Location_embedding.weight,tag="plnames")
-        self.logger.experiment.add_embedding(self.geoCode_embedding.weight,tag="geonouns")
-        self.logger.experiment.add_embedding(self.token_embedding.weight,tag="text")
+        #log embeddings for geonouns and plnames as table
+
+        self.logger.experiment.log(
+            {"LocationEmbedding": wandb.Table(
+                columns = ["Dimension {}".format(i) for i in range(self.Location_embedding.weight.shape[1])], 
+                data    = self.Location_embedding.weight.detach().cpu().numpy()
+                )})
+        self.logger.experiment.log(
+            {"geoCodeEmbedding": wandb.Table(
+                columns = ["Dimension {}".format(i) for i in range(self.geoCode_embedding.weight.shape[1])], 
+                data    = self.geoCode_embedding.weight.detach().cpu().numpy()
+                )})
+        self.logger.experiment.log({
+            "textEmbedding": wandb.Table(
+                columns = ["Dimension {}".format(i) for i in range(self.token_embedding.weight.shape[1])],
+                data    = self.token_embedding.weight.detach().cpu().numpy()
+                )
+            })
 
     def configure_optimizers(self):
         
         optimizer = torch.optim.AdamW(
-            self.parameters(), lr=self.hparams.learning_rate, eps=10e-8,
-            weight_decay=0.1,
-            betas=(0.9, 0.95),
+            self.parameters(), lr=self.hparams.learning_rate, eps=1e-8,
             )
         lr_schedulers = {"scheduler": ReduceLROnPlateau(optimizer), "monitor": "train_loss"}
 
